@@ -1,4 +1,9 @@
 #include <stdlib.h>
+#include <stdio.h>
+
+#define def_edge_weight 1.00
+#define def_neur_output 1.00
+#define def_neur_biasvl 1.00
 
 struct neuron {
     float bias;
@@ -12,7 +17,7 @@ struct layer {
 };
 
 struct model {
-    unsigned int input_n, output_n, hidden_n, hidden_n_sz;
+    unsigned int n_input, n_output, n_hidden, n_hidden_sz;
     struct layer input_layer;
     struct layer output_layer;
     struct layer* hidden_layers;
@@ -21,8 +26,13 @@ struct model {
 struct neuron Neuron(float bias, unsigned int sizeof_prev_layer) {
     struct neuron n;
     n.bias = bias;
-    n.output = 0.00;
+    n.output = def_neur_output;
     n.weights = malloc(sizeof(float) * sizeof_prev_layer);
+    float rand_weight;
+    for (unsigned int i = 0; i < sizeof_prev_layer; i++) {
+        rand_weight = (float)rand() / (float)RAND_MAX;
+        n.weights[i] = rand_weight;
+    }
     return n;
 }
 
@@ -30,22 +40,22 @@ struct layer Layer(unsigned int n_neurons, int sizeof_prev_layer){
     struct layer Layer;
     struct neuron* Neurons = malloc(n_neurons*sizeof(struct neuron));
     for (unsigned int i = 0; i < n_neurons; i++){
-        Neurons[i] = Neuron(1.00, sizeof_prev_layer);
+        Neurons[i] = Neuron((float)rand() / (float)RAND_MAX, sizeof_prev_layer);
     }
     Layer.length = n_neurons;
     Layer.neurons = Neurons;
     return Layer;
 }
 
-/*Define a model -> neu*/
+/*Define a model -> neural net*/
 struct model createModel(unsigned int n_inputs, unsigned int n_outputs, unsigned int n_hidden, unsigned int sz_hidden) {
     const unsigned int n_layers = n_inputs + n_outputs + n_hidden;
     struct model m;
 
-    m.input_n = n_inputs;
-    m.output_n = n_outputs;
-    m.hidden_n = n_hidden;
-    m.hidden_n_sz = sz_hidden;
+    m.n_input = n_inputs;
+    m.n_output = n_outputs;
+    m.n_hidden = n_hidden;
+    m.n_hidden_sz = sz_hidden;
 
     m.input_layer = Layer(n_inputs, 0);
     m.output_layer = Layer(n_outputs, sz_hidden);
@@ -65,16 +75,50 @@ struct model createModel(unsigned int n_inputs, unsigned int n_outputs, unsigned
     return m;
 }
 
+void computeLayer(struct layer* prv_layer, struct layer* cur_layer) {
+    struct neuron* current_neuron;
+    float neuron_output;
+
+    for ( unsigned int neur_i = 0; neur_i < cur_layer->length; neur_i++ ){
+        neuron_output = 0.00;
+        current_neuron = &cur_layer->neurons[neur_i];
+        for ( unsigned int prv_neur_j = 0; prv_neur_j < prv_layer->length; prv_neur_j++ ) {
+            neuron_output += (prv_layer->neurons[prv_neur_j].output * current_neuron->weights[prv_neur_j]);
+        }
+        current_neuron->output = neuron_output + current_neuron->bias;
+    }
+}
+
+float* genResult(struct model* Model){
+    float* out_values = malloc(Model->n_output * sizeof(float));
+    struct layer* current_layer;
+    struct layer* prev_layer;
+
+    for ( unsigned int layer_i = 0; layer_i < Model->n_hidden; layer_i++ ){
+        current_layer = &Model->hidden_layers[layer_i];
+        prev_layer = (layer_i == 0) ? &Model->input_layer : &Model->hidden_layers[layer_i - 1];
+        computeLayer(prev_layer, current_layer);
+    }
+    
+    computeLayer(&Model->hidden_layers[Model->n_hidden - 1], &Model->output_layer);
+
+    for ( unsigned int k = 0; k < Model->n_output; k++ ){
+        out_values[k] = Model->output_layer.neurons[k].output;
+    }
+
+    return out_values;
+}
+
 void tearDown(struct model* Model){
-    for (unsigned int i = 0; i < Model->input_n; i++) {
+    for (unsigned int i = 0; i < Model->n_input; i++) {
         printf("Input Neuron %d => \t bias: %f, output: %f\n", i, Model->input_layer.neurons[i].bias, Model->input_layer.neurons[i].output);
         free(Model->input_layer.neurons[i].weights);
     }
     free(Model->input_layer.neurons);
 
-    for (unsigned int i = 0; i < Model->hidden_n; i++) {
+    for (unsigned int i = 0; i < Model->n_hidden; i++) {
         printf("Hidden Layer %d:\n", i);
-        for (unsigned int j = 0; j < Model->hidden_n_sz; j++) {
+        for (unsigned int j = 0; j < Model->n_hidden_sz; j++) {
             const struct neuron n = Model->hidden_layers[i].neurons[j];
             printf("\t Neuron %d => \t bias: %f, output: %f\n", j, n.bias, n.output);
             free(Model->hidden_layers[i].neurons[j].weights);
@@ -83,7 +127,7 @@ void tearDown(struct model* Model){
     }
     free(Model->hidden_layers);
 
-    for (unsigned int i = 0; i < Model->output_n; i++) {
+    for (unsigned int i = 0; i < Model->n_output; i++) {
         printf("Output Neuron %d => \t bias: %f, output: %f\n", i, Model->output_layer.neurons[i].bias, Model->input_layer.neurons[i].output);
         free(Model->output_layer.neurons[i].weights);
     }
