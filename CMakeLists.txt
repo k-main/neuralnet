@@ -4,4 +4,4 @@ project(neuralnet
         DESCRIPTION "Neural network from scratch in C"
         )
 set(CMAKE_C_FLAGS "-lm")
-add_executable(main main.c model.h)
+add_executable(main main.c model.h model.c io.h io.c)

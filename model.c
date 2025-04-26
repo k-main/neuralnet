@@ -9,13 +9,10 @@
 #define def_edge_weight 1.00
 #define def_neur_output 1.00
 #define def_neur_biasvl 1.00
-#define e 2.71828f
 
 float _rand(void) {
     return ((rand() > RAND_MAX / 2) ? 1.00 : -1.00)*((float)rand() / (float)RAND_MAX);
 }
-
-
 
 float activation(enum actvn func, float input) {
     switch(func){
