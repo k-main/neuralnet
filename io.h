@@ -3,6 +3,6 @@
 #define io_h_
 
 int saveModel(struct model* Model);
-void loadModel(const char* name);
+struct model loadModel(const char* name);
 void dumpInfo(struct model* Model);
 #endif

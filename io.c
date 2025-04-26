@@ -28,7 +28,7 @@ int saveModel(struct model* Model) {
 }
 
 
-void loadModel(const char* name) {
+struct model loadModel(const char* name) {
     FILE* model_file;
     model_file = fopen(name, "rb");
     struct model Model;
@@ -54,15 +54,17 @@ void loadModel(const char* name) {
         for (uint neuron_j = 0; neuron_j < Model.n_hidden_sz; neuron_j++){
             Model.hidden_layers[layer_i].neurons[neuron_j].weights = malloc(sizeof(float) * prev_layer_len);
             fread(&Model.hidden_layers[layer_i].neurons[neuron_j], sizeof(float), 2, model_file);
-            fread(&Model.hidden_layers[layer_i].neurons[neuron_j].weights, sizeof(float), prev_layer_len, model_file);
+            fread(Model.hidden_layers[layer_i].neurons[neuron_j].weights, sizeof(float), prev_layer_len, model_file);
         }
     }
 
     for (uint neuron_i = 0; neuron_i < Model.n_output; neuron_i++){
         Model.output_layer.neurons[neuron_i].weights = malloc(sizeof(float) * Model.n_hidden_sz);
         fread(&Model.output_layer.neurons[neuron_i], sizeof(float), 2, model_file);
-        fread(&Model.output_layer.neurons[neuron_i].weights, sizeof(float), Model.n_hidden_sz, model_file);
+        fread(Model.output_layer.neurons[neuron_i].weights, sizeof(float), Model.n_hidden_sz, model_file);
     }
+
+    return Model;
 }
 
 void dumpInfo(struct model* Model){

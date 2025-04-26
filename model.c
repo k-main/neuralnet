@@ -9,6 +9,7 @@
 #define def_edge_weight 1.00
 #define def_neur_output 1.00
 #define def_neur_biasvl 1.00
+#define uint unsigned int
 
 float _rand(void) {
     return ((rand() > RAND_MAX / 2) ? 1.00 : -1.00)*((float)rand() / (float)RAND_MAX);
@@ -126,7 +127,7 @@ float* genResult(struct model* Model){
 void tearDown(struct model* Model){
     for (unsigned int i = 0; i < Model->n_input; i++) {
         printf("Input Neuron %d => \t bias: %f, output: %f\n", i, Model->input_layer.neurons[i].bias, Model->input_layer.neurons[i].output);
-        free(Model->input_layer.neurons[i].weights);
+        // free(Model->input_layer.neurons[i].weights);
     }
     free(Model->input_layer.neurons);
     unsigned int prev_layer_length = Model->n_input;
@@ -139,7 +140,7 @@ void tearDown(struct model* Model){
             for ( unsigned int k = 0; k < prev_layer_length; k++) printf(" %f ", Model->hidden_layers[i].neurons[j].weights[k]); printf("] \n");
             free(Model->hidden_layers[i].neurons[j].weights);
         }
-        prev_layer_length = Model->hidden_layers[i].length;
+        prev_layer_length = Model->n_hidden_sz;
         free(Model->hidden_layers[i].neurons);
     }
     free(Model->hidden_layers);
