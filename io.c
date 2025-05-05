@@ -25,6 +25,7 @@ int saveModel(struct model* Model) {
 
 
     fclose(model_file);
+    return 0;
 }
 
 

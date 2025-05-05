@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -18,7 +19,6 @@ enum actvn {
     relu,
     sigmoid
 };
-
 
 struct layer {
     unsigned int length;
