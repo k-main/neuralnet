@@ -7,6 +7,7 @@ struct server_t* Server(int port, int buffer_size){
     server->sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (server->sockfd == -1) {
         printf("[server] Failed to create socket: %d, exiting\n", errno);
+        return NULL;
     } else {
         printf("[server] Socket Created..\n");
     }
@@ -27,6 +28,7 @@ struct server_t* Server(int port, int buffer_size){
     bind_fail:
     printf("[server] Failed to bind to address structure: %d\n", errno);
     closeServer(server);
+    return NULL;
 }
 
 void closeServer(struct server_t* server){
