@@ -19,7 +19,7 @@
     I just wanted main() to look cleaner.
 */
 
-struct server_t {
+struct host_t {
     int sockfd;
     int port;
     int buffer_size;
@@ -30,7 +30,11 @@ struct server_t {
 
 #define unsigned int uint
 
-struct server_t* Server(int port, int buffer_size);
-void closeServer(struct server_t* server);
-int Listen(struct server_t* server);
+struct host_t* Server(int port, int buffer_size);
+struct host_t* Client(int port, int buffer_size);
+void closeHost(struct host_t* server);
+int Listen(struct host_t* server);
+int Connect(struct host_t*, const char* host);
+
+ctrl_t prepare_message(char* buffer);
 #endif
