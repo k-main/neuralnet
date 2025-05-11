@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) {
 
-    struct server_t* server = Server(PORT, BUFFER_SIZE);
+    struct host_t* server = Server(PORT, BUFFER_SIZE);
     Listen(server);
     
     return 0;
