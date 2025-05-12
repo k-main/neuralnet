@@ -77,31 +77,31 @@ int Listen(struct host_t* server){
         }
         
         fprintf(stderr, "[nnhost] Accepted connection");
-        memset(server->input_buffer, 0, sizeof(server->input_buffer));
-        char* current_message;
+        memset(server->input_buffer, 0, server->buffer_size * sizeof(char));
+        char current_message[server->buffer_size];
         while(1) {
-            memset(server->input_buffer, 0, sizeof(server->input_buffer));
-            bytes_recv = read(cli_sockfd, server->input_buffer, sizeof(server->input_buffer));
+            memset(server->input_buffer, 0, server->buffer_size * sizeof(char));
+            bytes_recv = read(cli_sockfd, server->input_buffer, server->buffer_size - 1);
             if (bytes_recv <= 0) 
             {
-                fprintf(stderr, "[nnhost] Error reading from socket\n");
+                fprintf(stderr, "[nnhost] Error reading from socket: %d\n", errno);
                 goto close;
             }
 
-            sprintf(current_message, "%s%s", current_message, server->input_buffer);
+            snprintf(current_message, server->buffer_size * sizeof(char), "%s%s", current_message, server->input_buffer);
             if (server->input_buffer[bytes_recv - 1] == '\0') {
                 fprintf(stderr, "[nnhost] Received message of size %d : %s \n", strlen(current_message), current_message);
                 
                 if (strcmp(server->input_buffer, "exit") == 0)
                 {
                     fprintf(stderr, "[nnhost] Received exit signal\n");
-                    memset(current_message, 0, strlen(current_message));
+                    memset(current_message, 0, server->buffer_size * sizeof(char));
                     close(cli_sockfd);
                     goto close_success;
                     break;
                 }
                 
-                memset(server->output_buffer, 0, sizeof(server->output_buffer));
+                memset(server->output_buffer, 0, sizeof(char) * server->buffer_size);
                 sprintf(server->output_buffer, "Got your message of size %d\0", strlen(current_message));
                 bytes_sent = write(cli_sockfd, server->output_buffer, strlen(server->output_buffer) + 1);
                 if (bytes_sent <= 0) 
@@ -130,6 +130,7 @@ int Listen(struct host_t* server){
 
 int Connect(struct host_t* client, const char* hostname){
     int ret, bytes_sent, bytes_recv, chars_read;
+    int getline_n = client->buffer_size * sizeof(char);
     struct hostent* server = gethostbyname(hostname);
     client->address.sin_family = AF_INET;
     client->address.sin_port = htons(client->port);
@@ -148,19 +149,19 @@ int Connect(struct host_t* client, const char* hostname){
         return -1;
     }
 
-    char* current_message;
+    char current_message[client->buffer_size];
     const char* prompt = "[neuralnet]~";
     fprintf(stderr, "[nnhost] Connection established with %s.\n", hostname);
     while(strcmp(client->output_buffer, "exit") != 0) {
         printf("%s", prompt);
-        memset(client->output_buffer, 0, client->buffer_size);
-        chars_read = getline(&client->output_buffer, (size_t*)&client->buffer_size, stdin);
+        memset(client->output_buffer, 0, client->buffer_size * sizeof(char));
+        chars_read = getline(&client->output_buffer, (size_t*)&getline_n, stdin);
         client->output_buffer[chars_read - 1] = '\0';
-
+        fprintf(stderr, "[nnhost] Sending %d bytes\n", chars_read);
         bytes_sent = write(client->sockfd, client->output_buffer, chars_read);
         if (bytes_sent < 0) goto write_fail;
 
-        memset(client->input_buffer, 0, sizeof(client->buffer_size));
+        memset(client->input_buffer, 0, client->buffer_size * sizeof(char));
         
         bytes_recv = read(client->sockfd, client->input_buffer, client->buffer_size - 1);
         if (bytes_recv < 0) goto read_fail;
