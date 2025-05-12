@@ -76,7 +76,7 @@ int Listen(struct host_t* server){
             continue;
         }
         
-        fprintf(stderr, "[nnhost] Accepted connection");
+        fprintf(stderr, "[nnhost] Accepted connection\n");
         memset(server->input_buffer, 0, server->buffer_size * sizeof(char));
         char current_message[server->buffer_size];
         while(1) {
