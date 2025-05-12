@@ -36,5 +36,4 @@ void closeHost(struct host_t* server);
 int Listen(struct host_t* server);
 int Connect(struct host_t*, const char* host);
 
-ctrl_t prepare_message(char* buffer);
 #endif

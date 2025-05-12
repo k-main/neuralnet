@@ -69,7 +69,7 @@ int Listen(struct host_t* server){
 
     int cli_sockfd = 0, bytes_recv = 0, bytes_sent = 0;
 
-    while (cli_sockfd != -1) {
+    while (1) {
         cli_sockfd = accept(server->sockfd, NULL, NULL);
         if (cli_sockfd == -1) {
             fprintf(stderr, "[nnhost] Failed to accept a connection\n");
@@ -77,9 +77,10 @@ int Listen(struct host_t* server){
         }
         
         fprintf(stderr, "[nnhost] Accepted connection");
+        memset(server->input_buffer, 0, sizeof(server->input_buffer));
+        char* current_message;
         while(1) {
             memset(server->input_buffer, 0, sizeof(server->input_buffer));
-            memset(server->output_buffer, 0, sizeof(server->output_buffer));
             bytes_recv = read(cli_sockfd, server->input_buffer, sizeof(server->input_buffer));
             if (bytes_recv <= 0) 
             {
@@ -87,32 +88,38 @@ int Listen(struct host_t* server){
                 goto close;
             }
 
-            fprintf(stderr, "[nnhost] Received message of size %d : %s \n", bytes_recv, server->input_buffer);
+            sprintf(current_message, "%s%s", current_message, server->input_buffer);
+            if (server->input_buffer[bytes_recv - 1] == '\0') {
+                fprintf(stderr, "[nnhost] Received message of size %d : %s \n", strlen(current_message), current_message);
+                
+                if (strcmp(server->input_buffer, "exit") == 0)
+                {
+                    fprintf(stderr, "[nnhost] Received exit signal\n");
+                    memset(current_message, 0, strlen(current_message));
+                    close(cli_sockfd);
+                    goto close_success;
+                    break;
+                }
+                
+                memset(server->output_buffer, 0, sizeof(server->output_buffer));
+                sprintf(server->output_buffer, "Got your message of size %d\0", strlen(current_message));
+                bytes_sent = write(cli_sockfd, server->output_buffer, strlen(server->output_buffer) + 1);
+                if (bytes_sent <= 0) 
+                {
+                    fprintf(stderr, "[nnhost] Error writing to buffer.");
+                    goto close;
+                }
+                fprintf(stderr, "[nnhost] Sent response of size %d\n", bytes_sent);
 
-            if (strcmp(server->input_buffer, "exit\n") == 0)
-            {
-                fprintf(stderr, "[nnhost] Received exit signal\n");
-                close(cli_sockfd);
-                cli_sockfd = -1;
-                break;
+                memset(current_message, 0, strlen(current_message));
             }
-
-            sprintf(server->output_buffer, "[nnhost] Providing generic response to message of size %d\n", bytes_recv);
-            bytes_sent = write(cli_sockfd, server->output_buffer, strlen(server->output_buffer));
-            if (bytes_sent <= 0) 
-            {
-                fprintf(stderr, "[nnhost] Error writing to buffer.");
-                goto close;
-            }
-            fprintf(stderr, "[nnhost] Sent response of size %d\n", bytes_sent);
-
-
-
         }
     }
 
+    close_success:
     closeHost(server);
     return 0;
+
     listen_fail:
     fprintf(stderr, "[nnhost] Failed to listen: %d, exiting\n", errno);
 
@@ -122,7 +129,7 @@ int Listen(struct host_t* server){
 }
 
 int Connect(struct host_t* client, const char* hostname){
-    int ret, bytes_sent, bytes_recv;
+    int ret, bytes_sent, bytes_recv, chars_read;
     struct hostent* server = gethostbyname(hostname);
     client->address.sin_family = AF_INET;
     client->address.sin_port = htons(client->port);
@@ -131,6 +138,7 @@ int Connect(struct host_t* client, const char* hostname){
     if (server == NULL) {
         fprintf(stderr, "[nnhost] No such host.\n");
         closeHost(client);
+        return -1;
     }
 
     ret = connect(client->sockfd, (const struct sockaddr*)&client->address, sizeof(struct sockaddr_in));
@@ -140,30 +148,42 @@ int Connect(struct host_t* client, const char* hostname){
         return -1;
     }
 
+    char* current_message;
     const char* prompt = "[neuralnet]~";
     fprintf(stderr, "[nnhost] Connection established with %s.\n", hostname);
-    fprintf(stderr, "%s", prompt);
     while(strcmp(client->output_buffer, "exit") != 0) {
-        memset(client->output_buffer, 0, client->buffer_size * sizeof(char));
-        getline(&client->output_buffer, (size_t*)&client->buffer_size, stdin);
-        bytes_sent = write(client->sockfd, client->output_buffer, strlen(client->output_buffer));
-        if (bytes_sent < 0)
-        {
-            fprintf(stderr, "[nnhost] Error writing to socket\n");
-            closeHost(client);
-        }
-        memset(client->input_buffer, 0, client->buffer_size * sizeof(char));
-        bytes_recv = read(client->sockfd, client->input_buffer, sizeof(client->input_buffer) - 1);
-        if (bytes_recv < 0)
-        {
-            fprintf(stderr, "[nnhost] Failed reading from socket: %d\n", errno);
-            closeHost(client);
+        printf("%s", prompt);
+        memset(client->output_buffer, 0, client->buffer_size);
+        chars_read = getline(&client->output_buffer, (size_t*)&client->buffer_size, stdin);
+        client->output_buffer[chars_read - 1] = '\0';
+
+        bytes_sent = write(client->sockfd, client->output_buffer, chars_read);
+        if (bytes_sent < 0) goto write_fail;
+
+        memset(client->input_buffer, 0, sizeof(client->buffer_size));
+        
+        bytes_recv = read(client->sockfd, client->input_buffer, client->buffer_size - 1);
+        if (bytes_recv < 0) goto read_fail;
+
+        if (client->input_buffer[bytes_recv - 1] == '\0') {
+            fprintf(stderr, "[nnhost] Received: %s (%d)\n", client->input_buffer, bytes_recv);
         }
 
-        fprintf(stderr, "[nnhost] Received %d bytes\n", bytes_recv);
-        // fprintf(stderr, "%s\n", (const char*)client->input_buffer);
+        if (strcmp(client->output_buffer, "exit") == 0) goto close;
     }
 
     closeHost(client);
     return 0;
+    
+    read_fail:
+    fprintf(stderr, "[nnhost] Failed reading from socket: %d\n", errno);
+    goto close;
+
+    write_fail:
+    fprintf(stderr, "[nnhost] Error writing to socket\n");
+    goto close;
+
+    close:
+    closeHost(client);
+    return -1;
 }

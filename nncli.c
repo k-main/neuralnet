@@ -4,7 +4,7 @@
 
 #include "nnhost.h"
 
-#define PORT 3200
+#define PORT 3201
 #define BUFFER_SIZE 128
 
 int main(int argc, char* argv[]){
