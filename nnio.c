@@ -4,6 +4,13 @@
 int saveModel(struct model* Model) {
     FILE* model_file;
     model_file = fopen(Model->name, "wb");
+
+    if (model_file == NULL) 
+    {
+        fprintf(stderr, "Failed to open %s\n", Model->name);
+        return -1;
+    }
+
     fwrite(&Model->output_layer.actv_func_t, sizeof(enum actvn), 1, model_file);
     fwrite(&Model->hidden_layers[0].actv_func_t, sizeof(enum actvn), 1, model_file);
 
@@ -29,41 +36,51 @@ int saveModel(struct model* Model) {
 }
 
 
-struct model loadModel(const char* name) {
+struct model* loadModel(const char* name) {
     FILE* model_file;
     model_file = fopen(name, "rb");
-    struct model Model;
+    
+    if (model_file == NULL)
+    {
+        fprintf(stderr, "Failed top open %s\n");
+        return NULL;
+    }
+
+    struct model* Model = malloc(sizeof(struct model));
+    
     enum actvn activation_functions[2];
     fread(&activation_functions[0], sizeof(enum actvn), 1, model_file); // for output
     fread(&activation_functions[1], sizeof(enum actvn), 1, model_file); // for hidden
-    fread(&Model, sizeof(uint), 4, model_file);
-    Model.input_layer.neurons = malloc(sizeof(struct neuron) * Model.n_input);
-    Model.input_layer.length = Model.n_input;
+    fread(Model, sizeof(uint), 4, model_file);
+    Model->input_layer.neurons = malloc(sizeof(struct neuron) * Model->n_input);
+    Model->input_layer.length = Model->n_input;
 
-    Model.output_layer.neurons = malloc(sizeof(struct neuron) * Model.n_output);
-    Model.output_layer.length = Model.n_output;
-    Model.output_layer.actv_func_t = activation_functions[0];
-    fread(Model.input_layer.neurons, sizeof(struct neuron), Model.n_input, model_file);
+    Model->output_layer.neurons = malloc(sizeof(struct neuron) * Model->n_output);
+    Model->output_layer.length = Model->n_output;
+    Model->output_layer.actv_func_t = activation_functions[0];
+    fread(Model->input_layer.neurons, sizeof(struct neuron), Model->n_input, model_file);
 
-    Model.hidden_layers = malloc(sizeof(struct layer) * Model.n_hidden);
+    Model->hidden_layers = malloc(sizeof(struct layer) * Model->n_hidden);
+
     uint prev_layer_len;
-    for (uint layer_i = 0; layer_i < Model.n_hidden; layer_i++){
-        prev_layer_len = (layer_i > 0) ? Model.n_hidden_sz : Model.n_input;
-        Model.hidden_layers[layer_i].length = Model.n_hidden_sz;
-        Model.hidden_layers[layer_i].actv_func_t = activation_functions[1];
-        Model.hidden_layers[layer_i].neurons = malloc(sizeof(struct neuron) * Model.n_hidden_sz);
-        for (uint neuron_j = 0; neuron_j < Model.n_hidden_sz; neuron_j++){
-            Model.hidden_layers[layer_i].neurons[neuron_j].weights = malloc(sizeof(float) * prev_layer_len);
-            fread(&Model.hidden_layers[layer_i].neurons[neuron_j], sizeof(float), 2, model_file);
-            fread(Model.hidden_layers[layer_i].neurons[neuron_j].weights, sizeof(float), prev_layer_len, model_file);
+    for (uint layer_i = 0; layer_i < Model->n_hidden; layer_i++){
+        prev_layer_len = (layer_i > 0) ? Model->n_hidden_sz : Model->n_input;
+        Model->hidden_layers[layer_i].length = Model->n_hidden_sz;
+        Model->hidden_layers[layer_i].actv_func_t = activation_functions[1];
+        Model->hidden_layers[layer_i].neurons = malloc(sizeof(struct neuron) * Model->n_hidden_sz);
+        for (uint neuron_j = 0; neuron_j < Model->n_hidden_sz; neuron_j++){
+            Model->hidden_layers[layer_i].neurons[neuron_j].weights = malloc(sizeof(float) * prev_layer_len);
+            fread(&Model->hidden_layers[layer_i].neurons[neuron_j], sizeof(float), 2, model_file);
+            fread(Model->hidden_layers[layer_i].neurons[neuron_j].weights, sizeof(float), prev_layer_len, model_file);
         }
     }
 
-    for (uint neuron_i = 0; neuron_i < Model.n_output; neuron_i++){
-        Model.output_layer.neurons[neuron_i].weights = malloc(sizeof(float) * Model.n_hidden_sz);
-        fread(&Model.output_layer.neurons[neuron_i], sizeof(float), 2, model_file);
-        fread(Model.output_layer.neurons[neuron_i].weights, sizeof(float), Model.n_hidden_sz, model_file);
+    for (uint neuron_i = 0; neuron_i < Model->n_output; neuron_i++){
+        Model->output_layer.neurons[neuron_i].weights = malloc(sizeof(float) * Model->n_hidden_sz);
+        fread(&Model->output_layer.neurons[neuron_i], sizeof(float), 2, model_file);
+        fread(Model->output_layer.neurons[neuron_i].weights, sizeof(float), Model->n_hidden_sz, model_file);
     }
+
 
     return Model;
 }

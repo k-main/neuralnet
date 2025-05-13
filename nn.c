@@ -1,8 +1,20 @@
 #include "model.h"
 #include "nnio.h"
 #include "nnhost.h"
+#include "nnexec.h"
 
 int main(int argc, char* argv[]) {
+
+
+    srand(getpid());
+    struct model* Model = loadModel("model1");
+    dumpInfo(Model);
+    tearDown(Model);
+    free(Model);
+
+    return 0;
+
+
     uint8_t remote_host = 0;
     int PORT = 3200;
     int BUFFER_SIZE = 128;
@@ -36,6 +48,7 @@ int main(int argc, char* argv[]) {
         struct host_t* server = Server(PORT, BUFFER_SIZE);
         if (server != NULL) {
             Listen(server);
+            return 0;
         } 
     } 
 
@@ -51,17 +64,13 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "Error reading from stdin.\n");
             return -1;
         }
-        fprintf(stderr, "< %s", input_buffer);
+        // fprintf(stderr, "< %s", input_buffer);
 
-        // pass to interpreter
+        interpret(input_buffer);
 
     } while(strncmp(input_buffer, "exit", 4) != 0);
     
     return 0;
 
-    srand(getpid());
-    struct model Model = loadModel("model1");
-    dumpInfo(&Model);
-    tearDown(&Model);
-    return 0;
+    
 }
