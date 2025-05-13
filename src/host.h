@@ -1,5 +1,5 @@
-#ifndef nnhost_h_
-#define nnhost_h_
+#ifndef _HOST_H_
+#define _HOST_H_
 
 #include <stdlib.h>
 #include <string.h>

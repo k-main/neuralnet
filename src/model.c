@@ -142,3 +142,4 @@ void tearDown(struct model* Model){
     }
     free(Model->output_layer.neurons);
 }
+

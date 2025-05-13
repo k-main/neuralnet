@@ -1,25 +1,16 @@
-#include "model.h"
-#include "nnio.h"
-#include "nnhost.h"
-#include "nnexec.h"
+#include "io.h"
+#include "host.h"
+#include "exec.h"
+
+#include "state.h"
 
 int main(int argc, char* argv[]) {
-
-
-    srand(getpid());
-    struct model* Model = loadModel("model1");
-    dumpInfo(Model);
-    tearDown(Model);
-    free(Model);
-
-    return 0;
-
 
     uint8_t remote_host = 0;
     int PORT = 3200;
     int BUFFER_SIZE = 128;
 
-    for (uint32_t argi = 1; argi < argc; argi++) {
+    for (int argi = 1; argi < argc; argi++) {
         if (!strncmp(argv[argi], "--host", 6)) {
             remote_host = 1;
             continue;
@@ -37,7 +28,7 @@ int main(int argc, char* argv[]) {
                         fprintf(stderr, "[nnhost] Invalid port: %d\n", argv[argi + 1]);
                         return 1;
                     }
-                    fprintf(stderr, "[nnhost] Server port = %d\n", PORT);
+                    printf("[nnhost] Server port = %d\n", PORT);
                     argi++;
                 }
             }
@@ -53,18 +44,17 @@ int main(int argc, char* argv[]) {
     } 
 
     char input_buffer[BUFFER_SIZE];
-    uint32_t getline_n = BUFFER_SIZE * sizeof(char) - 1;
+    int getline_n = BUFFER_SIZE * sizeof(char) - 1;
     char* chars_read;
 
     do {
-        fprintf(stderr, "> ");
+        printf("> ");
         memset(input_buffer, 0, strlen(input_buffer) * sizeof(char) + 1);
         chars_read = fgets(input_buffer, BUFFER_SIZE * sizeof(char), stdin);
         if (chars_read == NULL) {
             fprintf(stderr, "Error reading from stdin.\n");
             return -1;
         }
-        // fprintf(stderr, "< %s", input_buffer);
 
         interpret(input_buffer);
 
@@ -72,5 +62,11 @@ int main(int argc, char* argv[]) {
     
     return 0;
 
+    srand(getpid());
+    struct model* Model = loadModel("model1");
+    dumpInfo(Model);
+    tearDown(Model);
+    free(Model);
+    return 0;
     
 }

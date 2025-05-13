@@ -1,4 +1,4 @@
-#include "nnio.h"
+#include "io.h"
 #define unsigned int uint
 
 int saveModel(struct model* Model) {
@@ -42,11 +42,13 @@ struct model* loadModel(const char* name) {
     
     if (model_file == NULL)
     {
-        fprintf(stderr, "Failed top open %s\n");
+        fprintf(stderr, "Failed to open %s\n");
         return NULL;
     }
 
     struct model* Model = malloc(sizeof(struct model));
+    memset(Model->name, 0, strlen(name) + 1);
+    memcpy(Model->name, name, strlen(name));
     
     enum actvn activation_functions[2];
     fread(&activation_functions[0], sizeof(enum actvn), 1, model_file); // for output

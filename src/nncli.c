@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h> // for memcpy
 
-#include "nnhost.h"
+#include "host.h"
 
 #define BUFFER_SIZE 128
 #define HOSTLEN 64

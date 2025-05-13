@@ -1,4 +1,4 @@
-#include "nnhost.h"
+#include "host.h"
 
 struct host_t* Server(int port, int buffer_size){
     struct host_t* server = malloc(sizeof(struct host_t));
