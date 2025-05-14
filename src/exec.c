@@ -54,17 +54,17 @@ enum cmdres_t load(struct ProgramState* state, const char* modelname)
     while(state->lock == 1);
     state->lock = 1;
 
-    // for (uint8_t i = 0; i <= state->modeli; i++)
-    // {
-    //     if (state->modelv[i] != NULL)
-    //     {
-    //         if (!strcmp(state->modelv[i]->name, modelname))
-    //         {
-    //             state->lock = 0;
-    //             return LOAD_FAIL_EXISTS;
-    //         }
-    //     }
-    // }
+    for (uint8_t i = 0; i <= state->modeli; i++)
+    {
+        if (state->modelv[i] != NULL)
+        {
+            if (!strcmp(state->modelv[i]->name, modelname))
+            {
+                state->lock = 0;
+                return LOAD_FAIL_EXISTS;
+            }
+        }
+    }
 
     if (state->modeli >= state->modelc)
     {
