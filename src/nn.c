@@ -1,12 +1,17 @@
 #include "io.h"
 #include "host.h"
 #include "exec.h"
-
 #include "state.h"
 
 int main(int argc, char* argv[]) {
+    srand(getpid());
+    struct ProgramState state;
 
-    uint8_t remote_host = 0;
+    state.lock = 0;
+    state.modeli = 0;
+    state.modelc = 4;
+
+    char remote_host = 0;
     int PORT = 3200;
     int BUFFER_SIZE = 128;
 
@@ -56,17 +61,19 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        interpret(input_buffer);
+        cmdres(&state, input_buffer);
 
     } while(strncmp(input_buffer, "exit", 4) != 0);
-    
-    return 0;
 
-    srand(getpid());
-    struct model* Model = loadModel("model1");
-    dumpInfo(Model);
-    tearDown(Model);
-    free(Model);
+    for (uint8_t i = 0; i < state.modeli; i++)
+    {
+        if (state.modelv[i] != NULL)
+        {
+            printf("Deleting state.modelv[%d] \"%s\"\n", i, state.modelv[i]->name);
+            tearDown(state.modelv[i]);
+            free(state.modelv[i]);
+        }
+    }
+
     return 0;
-    
 }

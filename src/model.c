@@ -57,7 +57,7 @@ struct model createModel(char* name, unsigned int n_inputs, unsigned int n_outpu
     const unsigned int n_layers = n_inputs + n_outputs + n_hidden;
     struct model m;
 
-    m.name = name;
+    snprintf(m.name, 31 * sizeof(char), "%s", name);
     m.n_input = n_inputs;
     m.n_output = n_outputs;
     m.n_hidden = n_hidden;

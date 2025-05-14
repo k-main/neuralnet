@@ -2,6 +2,12 @@
 #define _STATE_H_
 
 #include "model.h"
-volatile static struct model* loadedModels[4];
-volatile static int modelc = 0;
+
+struct ProgramState {
+    uint8_t lock;
+    uint8_t modelc;
+    uint8_t modeli;
+    struct model* modelv[4];
+};
+
 #endif

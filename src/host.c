@@ -150,7 +150,7 @@ int Connect(struct host_t* client, const char* hostname){
     }
 
     char current_message[client->buffer_size];
-    const char* prompt = "[neuralnet]~";
+    const char* prompt = "> ";
     fprintf(stderr, "[nnhost] Connection established with %s.\n", hostname);
     while(strcmp(client->output_buffer, "exit") != 0) {
         printf("%s", prompt);
