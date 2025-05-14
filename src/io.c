@@ -9,6 +9,8 @@ int saveModel(struct model* Model) {
     {
         fprintf(stderr, "Failed to open %s\n", Model->name);
         return -1;
+    } else {
+        printf("Opened %s\n", Model->name);
     }
 
     fwrite(&Model->output_layer.actv_func_t, sizeof(enum actvn), 1, model_file);
@@ -42,7 +44,6 @@ struct model* loadModel(const char* name) {
     
     if (model_file == NULL)
     {
-        fprintf(stderr, "Failed to open %s\n", name);
         return NULL;
     }
 

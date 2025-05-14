@@ -1,7 +1,7 @@
 #include "io.h"
+#include "model.h"
 #include "host.h"
 #include "exec.h"
-#include "state.h"
 
 int main(int argc, char* argv[]) {
     srand(getpid());
@@ -71,7 +71,6 @@ int main(int argc, char* argv[]) {
         {
             printf("Deleting state.modelv[%d] \"%s\"\n", i, state.modelv[i]->name);
             tearDown(state.modelv[i]);
-            free(state.modelv[i]);
         }
     }
 

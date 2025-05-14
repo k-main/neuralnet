@@ -53,18 +53,18 @@ struct layer Layer(unsigned int n_neurons, int sizeof_prev_layer, enum actvn fun
     return Layer;
 }
 
-struct model createModel(char* name, unsigned int n_inputs, unsigned int n_outputs, unsigned int n_hidden, unsigned int sz_hidden, enum actvn actv_func) {
+struct model* createModel(char* name, unsigned int n_inputs, unsigned int n_outputs, unsigned int n_hidden, unsigned int sz_hidden, enum actvn actv_func) {
     const unsigned int n_layers = n_inputs + n_outputs + n_hidden;
-    struct model m;
+    struct model* m = malloc(sizeof(struct model));
 
-    snprintf(m.name, 31 * sizeof(char), "%s", name);
-    m.n_input = n_inputs;
-    m.n_output = n_outputs;
-    m.n_hidden = n_hidden;
-    m.n_hidden_sz = sz_hidden;
+    snprintf(m->name, 31 * sizeof(char), "%s", name);
+    m->n_input = n_inputs;
+    m->n_output = n_outputs;
+    m->n_hidden = n_hidden;
+    m->n_hidden_sz = sz_hidden;
 
-    m.input_layer = Layer(n_inputs, 0, actv_func);
-    m.output_layer = Layer(n_outputs, sz_hidden, actv_func);
+    m->input_layer = Layer(n_inputs, 0, actv_func);
+    m->output_layer = Layer(n_outputs, sz_hidden, actv_func);
     struct layer* hidden_layers = malloc(n_hidden * sizeof(struct layer));
 
     for (unsigned int i = 0; i < n_hidden; i++) {
@@ -77,7 +77,7 @@ struct model createModel(char* name, unsigned int n_inputs, unsigned int n_outpu
        }
     }
 
-    m.hidden_layers = hidden_layers;
+    m->hidden_layers = hidden_layers;
     return m;
 }
 
@@ -140,6 +140,7 @@ void tearDown(struct model* Model){
     for (unsigned int i = 0; i < Model->n_output; i++) {
         free(Model->output_layer.neurons[i].weights);
     }
-    free(Model->output_layer.neurons);
-}
 
+    free(Model->output_layer.neurons);
+    free(Model);
+}
