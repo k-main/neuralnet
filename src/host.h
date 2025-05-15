@@ -1,6 +1,8 @@
 #ifndef _HOST_H_
 #define _HOST_H_
 
+#include "exec.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -11,7 +13,6 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <netinet/in.h>
-
 /*
     Minimalistic interface for creating a simple TCP server to communicate
     with the program daemon from a separate docker container.
@@ -33,7 +34,7 @@ struct host_t {
 struct host_t* Server(int port, int buffer_size);
 struct host_t* Client(int port, int buffer_size);
 void closeHost(struct host_t* server);
-int Listen(struct host_t* server);
+int Listen(struct host_t* server, struct ProgramState* state);
 int Connect(struct host_t*, const char* host);
 
 #endif

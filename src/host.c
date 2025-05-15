@@ -62,7 +62,7 @@ void closeHost(struct host_t* server){
     fprintf(stderr, "[nnhost] Host structure freed. \n");
 }
 
-int Listen(struct host_t* server){
+int Listen(struct host_t* server, struct ProgramState* state){
     
     if (listen(server->sockfd, 5) == -1) goto listen_fail;
     fprintf(stderr, "[nnhost] TCP listening on port %d..\n", server->port);
@@ -92,6 +92,8 @@ int Listen(struct host_t* server){
             if (server->input_buffer[bytes_recv - 1] == '\0') {
                 fprintf(stderr, "[nnhost] Received message of size %d : %s \n", strlen(current_message), current_message);
                 
+
+                
                 if (strcmp(server->input_buffer, "exit") == 0)
                 {
                     fprintf(stderr, "[nnhost] Received exit signal\n");
@@ -102,7 +104,11 @@ int Listen(struct host_t* server){
                 }
                 
                 memset(server->output_buffer, 0, sizeof(char) * server->buffer_size);
-                sprintf(server->output_buffer, "Got your message of size %d\0", strlen(current_message));
+                cmdres(state, (const char*)current_message, server->output_buffer, sizeof(char) * server->buffer_size);
+                // sprintf(server->output_buffer, "Got your message of size %d\0", strlen(current_message));
+
+
+
                 bytes_sent = write(cli_sockfd, server->output_buffer, strlen(server->output_buffer) + 1);
                 if (bytes_sent <= 0) 
                 {
@@ -167,7 +173,7 @@ int Connect(struct host_t* client, const char* hostname){
         if (bytes_recv < 0) goto read_fail;
 
         if (client->input_buffer[bytes_recv - 1] == '\0') {
-            fprintf(stderr, "[nnhost] Received: %s (%d)\n", client->input_buffer, bytes_recv);
+            fprintf(stderr, "%s", client->input_buffer);
         }
 
         if (strcmp(client->output_buffer, "exit") == 0) goto close;

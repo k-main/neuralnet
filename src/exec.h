@@ -8,7 +8,7 @@ struct ProgramState {
     uint8_t lock;
     uint8_t modelc;
     uint8_t modeli;
-    struct model* modelv[4];
+    struct model** modelv;
 };
 
 struct ModelParams {
@@ -36,13 +36,16 @@ enum cmdres_t {
     CREATE_FAIL_EXISTS,
 };
 
-enum cmdres_t cmdres(struct ProgramState* state, const char* cmd);
-enum cmdres_t interpret(struct ProgramState* state, const char* cmd);
+struct ProgramState* defineState(uint8_t modelc);
+
+enum cmdres_t cmdres(struct ProgramState* state, const char* cmd, char* buffer, uint32_t buffer_size);
+enum cmdres_t interpret(struct ProgramState* state, const char* cmd, char* buffer, uint32_t buffer_size);
+enum cmdres_t destroy(struct ProgramState* state, char* buffer, uint32_t buffer_size);
 enum cmdres_t info(struct ProgramState* state, const char* modelname);
 enum cmdres_t load(struct ProgramState* state, const char* modelname);
 enum cmdres_t unload(struct ProgramState* state, const char* modelname);
 enum cmdres_t store(struct ProgramState* state, const char* modelname);
 enum cmdres_t create(struct ProgramState* state, struct ModelParams* params);
-enum cmdres_t list(struct ProgramState* state);
+enum cmdres_t list(struct ProgramState* state, char* buffer, uint32_t buffer_size);
 
 #endif

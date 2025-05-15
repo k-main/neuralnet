@@ -3,17 +3,16 @@
 #include "host.h"
 #include "exec.h"
 
+#define BUFFER_SIZE 256
+
 int main(int argc, char* argv[]) {
     srand(getpid());
-    struct ProgramState state;
-
-    state.lock = 0;
-    state.modeli = 0;
-    state.modelc = 4;
+    struct ProgramState* state = defineState(4);
+    char result[BUFFER_SIZE];
 
     char remote_host = 0;
     int PORT = 3200;
-    int BUFFER_SIZE = 128;
+    
 
     for (int argi = 1; argi < argc; argi++) {
         if (!strncmp(argv[argi], "--host", 6)) {
@@ -43,7 +42,12 @@ int main(int argc, char* argv[]) {
     if (remote_host == 1) {
         struct host_t* server = Server(PORT, BUFFER_SIZE);
         if (server != NULL) {
-            Listen(server);
+            Listen(server, state);
+
+            memset(result, 0, sizeof(char) * BUFFER_SIZE);
+            cmdres(state, "destroy", result, BUFFER_SIZE);
+            printf(result);
+
             return 0;
         } 
     } 
@@ -54,6 +58,7 @@ int main(int argc, char* argv[]) {
 
     do {
         printf("> ");
+        memset(result, 0, BUFFER_SIZE * sizeof(char));
         memset(input_buffer, 0, strlen(input_buffer) * sizeof(char) + 1);
         chars_read = fgets(input_buffer, BUFFER_SIZE * sizeof(char), stdin);
         if (chars_read == NULL) {
@@ -61,18 +66,12 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        cmdres(&state, input_buffer);
-
+        cmdres(state, input_buffer, result, BUFFER_SIZE);
+        printf(result);
     } while(strncmp(input_buffer, "exit", 4) != 0);
 
-    for (uint8_t i = 0; i < state.modeli; i++)
-    {
-        if (state.modelv[i] != NULL)
-        {
-            printf("Deleting state.modelv[%d] \"%s\"\n", i, state.modelv[i]->name);
-            tearDown(state.modelv[i]);
-        }
-    }
-
+    memset(result, 0, sizeof(char) * BUFFER_SIZE);
+    cmdres(state, "destroy", result, BUFFER_SIZE);
+    printf(result);
     return 0;
 }
