@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     struct ProgramState* state = defineState(4);
     char result[BUFFER_SIZE];
 
-    char remote_host = 0;
+    unsigned char remote_host = 0;
     int PORT = 3200;
     
 

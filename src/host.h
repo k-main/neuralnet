@@ -29,8 +29,6 @@ struct host_t {
     char* output_buffer;
 };
 
-#define unsigned int uint
-
 struct host_t* Server(int port, int buffer_size);
 struct host_t* Client(int port, int buffer_size);
 void closeHost(struct host_t* server);

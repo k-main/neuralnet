@@ -99,15 +99,19 @@ int Listen(struct host_t* server, struct ProgramState* state){
                     fprintf(stderr, "[nnhost] Received exit signal\n");
                     memset(current_message, 0, server->buffer_size * sizeof(char));
                     close(cli_sockfd);
-                    goto close_success;
                     break;
                 }
-                
+
+                if (strcmp(server->input_buffer, "destroy") == 0)
+                {
+                    fprintf(stderr, "[nnhost] Received destroy signal\n");
+                    close(cli_sockfd);
+                    goto close_success;
+                }
+
                 memset(server->output_buffer, 0, sizeof(char) * server->buffer_size);
                 cmdres(state, (const char*)current_message, server->output_buffer, sizeof(char) * server->buffer_size);
                 // sprintf(server->output_buffer, "Got your message of size %d\0", strlen(current_message));
-
-
 
                 bytes_sent = write(cli_sockfd, server->output_buffer, strlen(server->output_buffer) + 1);
                 if (bytes_sent <= 0) 
